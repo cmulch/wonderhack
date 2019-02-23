@@ -225,31 +225,35 @@ void output(unsigned char *buffer, int fileLen)
       printf("\n");
     }
   }
+
+  printf("\n");
 }
 
-int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAPINFOHEADER *bmInfoHeader)
+int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAPINFOHEADER *bmInfoHeader, unsigned long messageSize)
 {
-  char message[sizeof(inputMessage)] = {'\0'};
+  char* message = (char*)malloc(messageSize + 1);
 
   strcpy(message, inputMessage);
 
   srand(time(NULL));
 
-  if (sizeof(inputMessage * 7) > (bmInfoHeader->biWidth * bmInfoHeader->biHeight - 54))
+  if (messageSize * 7 > (bmInfoHeader->biWidth * bmInfoHeader->biHeight - 54))
   {
     printf("The message is too big, either provide a smaller message, or a larger photo.\n");
     exit(0);
   }
 
-  int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - (sizeof(inputMessage) * 7);
+  int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - (messageSize * 7);
   int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits) + bmFileHeader->bfOffBits;
+
+  free(message);
 
   return randomPosition;
 }
 
-char* caesarCipher(char* inputMessage, int shiftAmount)
+char* caesarCipher(char* inputMessage, int shiftAmount, unsigned long messageSize)
 {
-  char message[sizeof(inputMessage)] = {'\0'};
+  char* message = (char*)malloc(messageSize + 1);
 
   strcpy(message, inputMessage);
 
@@ -258,28 +262,29 @@ char* caesarCipher(char* inputMessage, int shiftAmount)
 	int i;
   for(i = 0; message[i] != '\0'; ++i){
 		ch = message[i];
-		
+
 		if(ch >= 'a' && ch <= 'z'){
 			ch = ch + shiftAmount;
-			
+
 			if(ch > 'z'){
 				ch = ch - 'z' + 'a' - 1;
 			}
-			
+
 			message[i] = ch;
 		}
 		else if(ch >= 'A' && ch <= 'Z'){
 			ch = ch + shiftAmount;
-			
+
 			if(ch > 'Z'){
 				ch = ch - 'Z' + 'A' - 1;
 			}
-			
+
 			message[i] = ch;
 		}
 	}
+
   return message;
-  
+
 }
 
 int main(int argc,char **argv)
@@ -335,7 +340,7 @@ int main(int argc,char **argv)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
-  int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader);
+  int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader, strlen(argv[2]));
 
   buffer[RESERVED_OFFSET] =     FIRST_MODULUS;  // The start of the escape character sequence
   buffer[RESERVED_OFFSET + 1] = SECOND_MODULUS;  // The modulus number
@@ -344,6 +349,12 @@ int main(int argc,char **argv)
   fwrite(buffer, 1, fileLen, fp);
 
   output(buffer, fileLen);
+
+  //ciphered[sizeof(argv[2])] = {'\0'};
+  char* ciphered = caesarCipher(argv[2], 1, strlen(argv[2]));
+  //strcpy(ciphered, caesarCipher(argv[2], 1));
+
+  printf("%s\n", ciphered);
 
   fclose(fp);
 
@@ -374,6 +385,7 @@ int main(int argc,char **argv)
   free(bmFileHeader);
   free(bmCoreHeader);
   free(bmInfoHeader);
+  free(ciphered);
 
   return 0;
 }
