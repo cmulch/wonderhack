@@ -1,8 +1,9 @@
-#include "stdio.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "math.h"
 #include <string.h>
 #include "bmp.h"
+#include <time.h>
 unsigned short ReadLE2(FILE *fp);
 unsigned int ReadLE4(FILE *fp);
 
@@ -200,7 +201,38 @@ unsigned int ReadLE4(FILE *fp)
     return result;
 }
 
+void output(unsigned char *buffer, int fileLen)
+{
+  for (int c = 0; c < fileLen + 1; c++)
+  {
+    printf("%.2X ", (int)buffer[c]);
 
+    if (c % 4 == 3)
+    {
+      printf(" ");
+    }
+
+    if (c % 16 == 15)
+    {
+      printf("\n");
+    }
+  }
+}
+
+int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAPINFOHEADER *bmInfoHeader)
+{
+  char message[sizeof(inputMessage)] = {'\0'};
+
+  strcpy(message, inputMessage);
+
+  srand(time(NULL));
+
+  int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - 13;
+
+  int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits);
+
+  return randomPosition;
+}
 
 int main(int argc,char **argv)
 {
@@ -210,8 +242,8 @@ int main(int argc,char **argv)
   BITMAPINFOHEADER *bmInfoHeader = NULL;
   int headersize;
 
-  if (argc != 2) {
-      printf("Usage: bmpinfo <file.bmp>\n\n");
+  if (argc != 3) {
+      printf("Usage: bmpinfo <file.bmp> <message>\n\n");
       exit(1);
   }
 
@@ -255,22 +287,16 @@ int main(int argc,char **argv)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
-  // We need to reset the position of the file pointer, because fread moves the pointer to the end of the file
-  fseek(fp, 0, SEEK_SET);
-  for (int c = 0; c < fileLen + 1; c++)
-  {
-    printf("%.2X ", (int)buffer[c]);
+  output(buffer, fileLen);
 
-    if (c % 4 == 3)
-    {
-      printf(" ");
-    }
+  int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader);
 
-    if (c % 16 == 15)
-    {
-      printf("\n");
-    }
-  }
+  int reserved_offset = 6;
+  buffer[reserved_offset] = 0xFF;
+  buffer[reserved_offset + 1] = 0x11;
+  buffer[reserved_offset + 2] = 0x06;
+  buffer[reserved_offset + 3] = 0x00;
+  fwrite(buffer, 1, fileLen, fp);
 
   fclose(fp);
 
@@ -295,6 +321,8 @@ int main(int argc,char **argv)
       printf("Y pixels per meter = %ld\n", bmInfoHeader->biYPixPerMeter);
       printf("Color used         = %ld colors\n", bmInfoHeader->biClrUsed);
   }
+
+  printf("Random Offset: %d\n", offset);
 
   free(bmFileHeader);
   free(bmCoreHeader);
