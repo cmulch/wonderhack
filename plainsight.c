@@ -550,8 +550,8 @@ int main(int argc,char **argv)
 
   printf("Random Offset: %d\n", offset);
 
-  unsigned char* newBuf = encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[2]));
-  output(newBuf, fileLen);
+  unsigned char* newBuf = encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[3]));
+  //output(newBuf, fileLen);
 
   //printf("%d\n", memcmp(newBuf, buffer, 20000));
 
