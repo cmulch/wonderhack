@@ -258,7 +258,7 @@ int main(int argc,char **argv)
   // We need to reset the position of the file pointer, because fread moves the pointer to the end of the file
   fseek(fp, 0, headersize);
 
-  for (int c = 54; c < fileLen + 1; c++)
+  for (int c = bmFileHeader->bfOffBits; c < fileLen + 1; c++)
   {
     printf("%.2X ", (int)buffer[c]);
 
