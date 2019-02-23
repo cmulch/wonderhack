@@ -235,6 +235,12 @@ int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAP
 
   srand(time(NULL));
 
+  if (sizeof(inputMessage * 7) > (bmInfoHeader->biWidth * bmInfoHeader->biHeight - 54))
+  {
+    printf("The message is too big, either provide a smaller message, or a larger photo.\n");
+    exit(0);
+  }
+
   int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - (sizeof(inputMessage) * 7);
   int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits) + bmFileHeader->bfOffBits;
 
