@@ -512,8 +512,8 @@ int main(int argc,char **argv)
 
   short int offset = genRandomPosition(argv[3], bmFileHeader, bmInfoHeader, strlen(argv[3]));
 
-  buffer[RESERVED_OFFSET] =     FIRST_MODULUS;  // The start of the escape character sequence
-  buffer[RESERVED_OFFSET + 1] = SECOND_MODULUS;  // The modulus number
+  buffer[RESERVED_OFFSET] = (offset >> 8);  // The index into the file where the data starts
+  buffer[RESERVED_OFFSET + 1] = (offset & 0xFF);
   buffer[RESERVED_OFFSET + 2] = SPACE;  // The spaces between pixels
   buffer[RESERVED_OFFSET + 3] = EXTRA;  // Reserving this value right now
   output(buffer, fileLen);
