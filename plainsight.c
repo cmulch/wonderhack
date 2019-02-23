@@ -19,9 +19,11 @@ struct {
   unsigned int b:8;
 } rgb;
 
+// Possibly using wrong & in if statements?
 unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int offset, char* message, unsigned long messageSize)
 {
-  int escapeFlag = 0;
+  unsigned char* encryptedBuf = (unsigned char*)malloc(fileLen + 1);
+
   int messageCounter = 0;
 
   int rgbTotal = 0;
@@ -32,11 +34,16 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
 
   int currentPos = 0;
 
+  for (int i = 0; i < fileLen + 1; i++)
+  {
+    encryptedBuf[i] = buffer[i];
+  }
+
   for (int i = offset; i < fileLen + 1; i += SPACE)
   {
-    rgb.r = (int)buffer[i];
-    rgb.g = (int)buffer[i + 1];
-    rgb.b = (int)buffer[i + 2];
+    rgb.r = (int)encryptedBuf[i];
+    rgb.g = (int)encryptedBuf[i + 1];
+    rgb.b = (int)encryptedBuf[i + 2];
 
     rgbTotal = 0;
 
@@ -48,53 +55,32 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
 
     if (messageCounter == messageSize)
     {
-      if (escapeFlag % 2 == 0)
-      {
-        toReach = FIRST_MODULUS;
-        rgbMod = rgbTotal % FIRST_MODULUS;
-        printf("Current Mod: %d\n", rgbMod);
-
-        difference = toReach - rgbMod;
-
-        printf("Escape Difference: %d\n", difference);
-        printf("Writing end first mod\n");
-      }
-      else
-      {
-        rgbMod = rgbTotal % SECOND_MODULUS;
-        printf("Writing end second mod...\n");
-      }
-
-      escapeFlag--;
-
-      if (escapeFlag == 0)
-        break;
-
-      continue;
+      //printf("We've finished writing our method...\n");
+      break;
     }
-    else if (messageCounter < messageSize & escapeFlag == 4)
+    else if (messageCounter < messageSize)
     {
-      printf("Writing normal character...\n");
-      printf("Current Character: %d\n", (int)currentChar - 97);
-      printf("Current Character: %c\n", currentChar);
+      //printf("Writing normal character...\n");
+      //printf("Current Character: %d\n", (int)currentChar - 97);
+      //printf("Current Character: %c\n", currentChar);
 
       toReach = (int)currentChar - 97;
 
       rgbMod = rgbTotal % 26;
 
-      printf("Current rgbMod: %d\n", rgbMod);
+      //printf("Current rgbMod: %d\n", rgbMod);
 
-      printf("Initial RGB Total: %d\n", rgbTotal);
+      //printf("Initial RGB Total: %d\n", rgbTotal);
 
-      printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+      //printf("%.2X%.2X%.2X\n", rgb.r, rgb.g, rgb.b);
 
       difference = toReach - rgbMod;
 
-      printf("Current difference: %d\n", difference);
+      //printf("Current difference: %d\n", difference);
 
       if (difference < 0 & abs(difference) > 13)
       {
-        printf("Negative difference, overflow increment...\n");
+        //printf("Negative difference, overflow increment...\n");
 
         for (int j = 0; j < abs(difference); j++)
         {
@@ -159,12 +145,12 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%.2X%.2X%.2X\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
       else if (difference > 0 & abs(difference) > 13)
       {
-        printf("Positive difference, overflow decrement...\n");
+        //printf("Positive difference, overflow decrement...\n");
 
         for (int j = 0; j < abs(difference); j++)
         {
@@ -229,12 +215,12 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
       else if (difference < 0)
       {
-        printf("Negative difference, decrement...\n");
+        //printf("Negative difference, decrement...\n");
 
         for (int j = 0; j < abs(difference); j++)
         {
@@ -299,12 +285,12 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
       else if (difference > 0)
       {
-        printf("Positive difference, increment...\n");
+        //printf("Positive difference, increment...\n");
 
         for (int j = 0; j < abs(difference); j++)
         {
@@ -369,36 +355,21 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
 
       messageCounter++;
     }
 
-    if (escapeFlag != 4)
-    {
-      if (escapeFlag % 2 == 0)
-      {
-        rgbMod = rgbTotal % FIRST_MODULUS;
-        printf("Writing first mod...\n");
-      }
-      else
-      {
-        rgbMod = rgbTotal % SECOND_MODULUS;
-        printf("Writing second mod...\n");
-      }
+    //printf("%.2X%.2X%.2X\n", rgb.r, rgb.g, rgb.b);
 
-      escapeFlag++;
-    }
-
-
-    //printf("%.2X%.2X%.2X ", rgb.r, rgb.g, rgb.b);
-
-
+    encryptedBuf[i] = (char)rgb.r;
+    encryptedBuf[i + 1] = (char)rgb.g;
+    encryptedBuf[i + 2] = (char)rgb.b;
   }
 
-  return NULL;
+  return encryptedBuf;
 }
 
 void output(unsigned char *buffer, int fileLen)
@@ -484,18 +455,23 @@ char* caesarCipher(char* inputMessage, int shiftAmount, unsigned long messageSiz
 int main(int argc,char **argv)
 {
   FILE *fp;
+  FILE *out;
   BITMAPFILEHEADER *bmFileHeader = NULL;
   BITMAPCOREHEADER *bmCoreHeader = NULL;
   BITMAPINFOHEADER *bmInfoHeader = NULL;
   int headersize;
 
-  if (argc != 3) {
-      printf("Usage: bmpinfo <file.bmp> <message>\n\n");
+  if (argc != 4) {
+      printf("Usage: bmpinfo <infile.bmp> <outfile.bmp> <message>\n\n");
       exit(1);
   }
 
   if ((fp = fopen(argv[1], "rb")) == NULL) {
       printf("Cannot open file: %s\n\n", argv[1]);
+      exit(1);
+  }
+  if ((out = fopen(argv[2], "w+")) == NULL) {
+      printf("Cannot open file: %s\n\n", argv[2]);
       exit(1);
   }
   bmFileHeader = ReadBMFileHeader(fp);
@@ -534,14 +510,12 @@ int main(int argc,char **argv)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
-  short int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader, strlen(argv[2]));
+  short int offset = genRandomPosition(argv[3], bmFileHeader, bmInfoHeader, strlen(argv[3]));
 
   buffer[RESERVED_OFFSET] =     FIRST_MODULUS;  // The start of the escape character sequence
   buffer[RESERVED_OFFSET + 1] = SECOND_MODULUS;  // The modulus number
   buffer[RESERVED_OFFSET + 2] = SPACE;  // The spaces between pixels
   buffer[RESERVED_OFFSET + 3] = EXTRA;  // Reserving this value right now
-  fwrite(buffer, 1, fileLen, fp);
-
   output(buffer, fileLen);
 
   //ciphered[sizeof(argv[2])] = {'\0'};
@@ -576,7 +550,14 @@ int main(int argc,char **argv)
 
   printf("Random Offset: %d\n", offset);
 
-  encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[2]));
+  unsigned char* newBuf = encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[2]));
+  output(newBuf, fileLen);
+
+  //printf("%d\n", memcmp(newBuf, buffer, 20000));
+
+  fwrite(newBuf, 1, fileLen, out);
+
+  fclose(out);
 
   free(bmFileHeader);
   free(bmCoreHeader);
