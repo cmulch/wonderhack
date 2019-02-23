@@ -24,15 +24,47 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
   int escapeFlag = 0;
   int messageCounter = 0;
 
+  int rgbTotal = 0;
+  int rgbMod = 0;
+  char currentChar;
+  int toReach = 0;
+  int difference = 0;
+
+  int currentPos = 0;
+
   for (int i = offset; i < fileLen + 1; i += SPACE)
   {
     rgb.r = (int)buffer[i];
     rgb.g = (int)buffer[i + 1];
     rgb.b = (int)buffer[i + 2];
 
+    rgbTotal = 0;
+
+    rgbTotal += rgb.r;
+    rgbTotal += rgb.g;
+    rgbTotal += rgb.b;
+
+    currentChar = message[messageCounter];
+
     if (messageCounter == messageSize)
     {
-      printf("Writing end escape character...\n");
+      if (escapeFlag % 2 == 0)
+      {
+        toReach = FIRST_MODULUS;
+        rgbMod = rgbTotal % FIRST_MODULUS;
+        printf("Current Mod: %d\n", rgbMod);
+
+        difference = toReach - rgbMod;
+
+        printf("Escape Difference: %d\n", difference);
+        printf("Writing end first mod\n");
+      }
+      else
+      {
+        rgbMod = rgbTotal % SECOND_MODULUS;
+        printf("Writing end second mod...\n");
+      }
+
       escapeFlag--;
 
       if (escapeFlag == 0)
@@ -43,12 +75,320 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
     else if (messageCounter < messageSize & escapeFlag == 4)
     {
       printf("Writing normal character...\n");
+      printf("Current Character: %d\n", (int)currentChar - 97);
+      printf("Current Character: %c\n", currentChar);
+
+      toReach = (int)currentChar - 97;
+
+      rgbMod = rgbTotal % 26;
+
+      printf("Current rgbMod: %d\n", rgbMod);
+
+      printf("Initial RGB Total: %d\n", rgbTotal);
+
+      printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+
+      difference = toReach - rgbMod;
+
+      printf("Current difference: %d\n", difference);
+
+      if (difference < 0 & abs(difference) > 13)
+      {
+        printf("Negative difference, overflow increment...\n");
+
+        for (int j = 0; j < abs(difference); j++)
+        {
+          if (currentPos == 3)
+          {
+            //printf("Switching back to 0\n");
+            currentPos = 0;
+          }
+
+          if (currentPos == 0)
+          {
+            //printf("Updating R\n");
+
+            if (rgb.r == 255)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.r = rgb.r + 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 1)
+          {
+            //printf("Updating G\n");
+
+            if (rgb.g == 255)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.g = rgb.g + 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 2)
+          {
+            //printf("Updating B\n");
+
+            if (rgb.b == 255)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.b = rgb.b + 1;
+            currentPos++;
+            continue;
+          }
+        }
+
+        rgbTotal = 0;
+        rgbTotal += rgb.r;
+        rgbTotal += rgb.g;
+        rgbTotal += rgb.b;
+
+        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        printf("Updated RGB Total: %d\n", rgbTotal);
+      }
+      else if (difference > 0 & abs(difference) > 13)
+      {
+        printf("Positive difference, overflow decrement...\n");
+
+        for (int j = 0; j < abs(difference); j++)
+        {
+          if (currentPos == 3)
+          {
+            //printf("Switching back to 0\n");
+            currentPos = 0;
+          }
+
+          if (currentPos == 0)
+          {
+            //printf("Updating R\n");
+
+            if (rgb.r == 0)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.r = rgb.r - 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 1)
+          {
+            //printf("Updating G\n");
+
+            if (rgb.g == 0)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.g = rgb.g - 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 2)
+          {
+            //printf("Updating B\n");
+
+            if (rgb.b == 0)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.b = rgb.b - 1;
+            currentPos++;
+            continue;
+          }
+        }
+
+        rgbTotal = 0;
+        rgbTotal += rgb.r;
+        rgbTotal += rgb.g;
+        rgbTotal += rgb.b;
+
+        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        printf("Updated RGB Total: %d\n", rgbTotal);
+      }
+      else if (difference < 0)
+      {
+        printf("Negative difference, decrement...\n");
+
+        for (int j = 0; j < abs(difference); j++)
+        {
+          if (currentPos == 3)
+          {
+            //printf("Switching back to 0\n");
+            currentPos = 0;
+          }
+
+          if (currentPos == 0)
+          {
+            //printf("Updating R\n");
+
+            if (rgb.r == 0)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.r = rgb.r - 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 1)
+          {
+            //printf("Updating G\n");
+
+            if (rgb.g == 0)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.g = rgb.g - 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 2)
+          {
+            //printf("Updating B\n");
+
+            if (rgb.b == 0)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.b = rgb.b - 1;
+            currentPos++;
+            continue;
+          }
+        }
+
+        rgbTotal = 0;
+        rgbTotal += rgb.r;
+        rgbTotal += rgb.g;
+        rgbTotal += rgb.b;
+
+        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        printf("Updated RGB Total: %d\n", rgbTotal);
+      }
+      else if (difference > 0)
+      {
+        printf("Positive difference, increment...\n");
+
+        for (int j = 0; j < abs(difference); j++)
+        {
+          if (currentPos == 3)
+          {
+            //printf("Switching back to 0\n");
+            currentPos = 0;
+          }
+
+          if (currentPos == 0)
+          {
+            //printf("Updating R\n");
+
+            if (rgb.r == 255)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.r = rgb.r + 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 1)
+          {
+            //printf("Updating G\n");
+
+            if (rgb.g == 255)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.g = rgb.g + 1;
+            currentPos++;
+            continue;
+          }
+          else if (currentPos == 2)
+          {
+            //printf("Updating B\n");
+
+            if (rgb.b == 255)
+            {
+              //printf("This should be an overflow...\n");
+              currentPos++;
+              j--;
+              continue;
+            }
+
+            rgb.b = rgb.b + 1;
+            currentPos++;
+            continue;
+          }
+        }
+
+        rgbTotal = 0;
+        rgbTotal += rgb.r;
+        rgbTotal += rgb.g;
+        rgbTotal += rgb.b;
+
+        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        printf("Updated RGB Total: %d\n", rgbTotal);
+      }
+
       messageCounter++;
     }
 
     if (escapeFlag != 4)
     {
-      printf("Writing escape character...\n");
+      if (escapeFlag % 2 == 0)
+      {
+        rgbMod = rgbTotal % FIRST_MODULUS;
+        printf("Writing first mod...\n");
+      }
+      else
+      {
+        rgbMod = rgbTotal % SECOND_MODULUS;
+        printf("Writing second mod...\n");
+      }
+
       escapeFlag++;
     }
 
@@ -83,7 +423,7 @@ void output(unsigned char *buffer, int fileLen)
   printf("\n");
 }
 
-int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAPINFOHEADER *bmInfoHeader, unsigned long messageSize)
+short int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAPINFOHEADER *bmInfoHeader, unsigned long messageSize)
 {
   char* message = (char*)malloc(messageSize + 1);
 
@@ -98,7 +438,7 @@ int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAP
   }
 
   int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - (messageSize * 7);
-  int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits) + bmFileHeader->bfOffBits;
+  short int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits) + bmFileHeader->bfOffBits;
 
   free(message);
 
@@ -194,7 +534,7 @@ int main(int argc,char **argv)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
-  int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader, strlen(argv[2]));
+  short int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader, strlen(argv[2]));
 
   buffer[RESERVED_OFFSET] =     FIRST_MODULUS;  // The start of the escape character sequence
   buffer[RESERVED_OFFSET + 1] = SECOND_MODULUS;  // The modulus number
