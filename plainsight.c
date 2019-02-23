@@ -8,7 +8,7 @@
 #define RESERVED_OFFSET 6
 #define FIRST_MODULUS 0x0C
 #define SECOND_MODULUS 0X11
-#define SPACE 0xFF
+#define SPACE 0x01
 #define EXTRA 0x00
 unsigned short ReadLE2(FILE *fp);
 unsigned int ReadLE4(FILE *fp);
@@ -19,8 +19,12 @@ struct {
   unsigned int b:8;
 } rgb;
 
+struct {
+  unsigned int x:24;
+} twentyFour;
+
 // Possibly using wrong & in if statements?
-unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int offset, char* message, unsigned long messageSize)
+unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, unsigned short int offset, char* message, unsigned long messageSize)
 {
   unsigned char* encryptedBuf = (unsigned char*)malloc(fileLen + 1);
 
@@ -31,7 +35,6 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
   char currentChar;
   int toReach = 0;
   int difference = 0;
-
   int currentPos = 0;
 
   for (int i = 0; i < fileLen + 1; i++)
@@ -55,7 +58,17 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
 
     if (messageCounter == messageSize)
     {
+      printf("Offset: %d\n", offset);
+
       //printf("We've finished writing our method...\n");
+
+      printf("End: %d\n", i);
+
+      int num = 0x123456;
+
+      encryptedBuf[46] = (i >> 16);
+      encryptedBuf[46 + 1] = ((i >> 8) & 0xFF);
+      encryptedBuf[46 + 2] = (i & 0xFF);
       break;
     }
     else if (messageCounter < messageSize)
@@ -374,7 +387,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int
 
 void output(unsigned char *buffer, int fileLen)
 {
-  for (int c = 0; c < fileLen + 1; c++)
+  for (int c = 0; c < 100; c++)
   {
     printf("%.2X ", (int)buffer[c]);
 
@@ -394,24 +407,27 @@ void output(unsigned char *buffer, int fileLen)
   printf("\n");
 }
 
-short int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAPINFOHEADER *bmInfoHeader, unsigned long messageSize)
+short int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAPINFOHEADER *bmInfoHeader, unsigned long messageSize, unsigned long fileLen)
 {
   char* message = (char*)malloc(messageSize + 1);
+
+  printf("Random Position: %lu\n", messageSize);
 
   strcpy(message, inputMessage);
 
   srand(time(NULL));
 
-  if (messageSize * 7 > (bmInfoHeader->biWidth * bmInfoHeader->biHeight - 54))
+  if (65536 + (8192 * SPACE) > bmInfoHeader->biSizeImage)
   {
     printf("The message is too big, either provide a smaller message, or a larger photo.\n");
     exit(0);
   }
 
-  int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - (messageSize * 7);
-  short int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits) + bmFileHeader->bfOffBits;
+  unsigned short int randomPosition = rand() % 65536 + 54;
 
   free(message);
+
+  printf("Random Pos: %d\n", randomPosition);
 
   return randomPosition;
 }
@@ -510,19 +526,19 @@ int main(int argc,char **argv)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
-  if (strlen(argv[3] > 8192))
+  if (strlen(argv[3]) > 8192)
   {
-    printf("String is too long, please try again with a smaller string.\n")
+    printf("String is too long, please try again with a smaller string.\n");
     exit(1);
   }
 
-  short int offset = genRandomPosition(argv[3], bmFileHeader, bmInfoHeader, strlen(argv[3]));
+  unsigned short int offset = genRandomPosition(argv[3], bmFileHeader, bmInfoHeader, strlen(argv[3]), fileLen);
 
   buffer[RESERVED_OFFSET] = (offset >> 8);  // The index into the file where the data starts
   buffer[RESERVED_OFFSET + 1] = (offset & 0xFF);
   buffer[RESERVED_OFFSET + 2] = SPACE;  // The spaces between pixels
   buffer[RESERVED_OFFSET + 3] = EXTRA;  // Reserving this value right now
-  output(buffer, fileLen);
+  //output(buffer, fileLen);
 
   //ciphered[sizeof(argv[2])] = {'\0'};
   char* ciphered = caesarCipher(argv[3], 1, strlen(argv[3]));
@@ -557,7 +573,7 @@ int main(int argc,char **argv)
   printf("Random Offset: %d\n", offset);
 
   unsigned char* newBuf = encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[3]));
-  //output(newBuf, fileLen);
+  output(newBuf, fileLen);
 
   //printf("%d\n", memcmp(newBuf, buffer, 20000));
 
