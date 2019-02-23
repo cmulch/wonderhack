@@ -225,6 +225,9 @@ int main(int argc,char **argv)
       exit(1);
   }
   headersize = SizeOfInformationHeader(fp);
+
+  //printf("HEADER SIZE: %d", headersize);
+
   if (headersize == 12) {
       bmCoreHeader = ReadBMCoreHeader(fp);
   } else if (headersize == 40) {
@@ -253,9 +256,9 @@ int main(int argc,char **argv)
   fread(buffer, fileLen, 1, fp);
 
   // We need to reset the position of the file pointer, because fread moves the pointer to the end of the file
-  fseek(fp, 0, SEEK_SET);
+  fseek(fp, 0, headersize);
 
-  for (int c = 0; c < fileLen + 1; c++)
+  for (int c = 54; c < fileLen + 1; c++)
   {
     printf("%.2X ", (int)buffer[c]);
 
