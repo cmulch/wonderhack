@@ -8,7 +8,7 @@
 #define RESERVED_OFFSET 6
 #define FIRST_MODULUS 0x0C
 #define SECOND_MODULUS 0X11
-#define SPACE 0x06
+#define SPACE 0xFF
 #define EXTRA 0x00
 unsigned short ReadLE2(FILE *fp);
 unsigned int ReadLE4(FILE *fp);
@@ -510,6 +510,12 @@ int main(int argc,char **argv)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
+  if (strlen(argv[3] > 8192))
+  {
+    printf("String is too long, please try again with a smaller string.\n")
+    exit(1);
+  }
+
   short int offset = genRandomPosition(argv[3], bmFileHeader, bmInfoHeader, strlen(argv[3]));
 
   buffer[RESERVED_OFFSET] = (offset >> 8);  // The index into the file where the data starts
@@ -519,7 +525,7 @@ int main(int argc,char **argv)
   output(buffer, fileLen);
 
   //ciphered[sizeof(argv[2])] = {'\0'};
-  char* ciphered = caesarCipher(argv[2], 1, strlen(argv[2]));
+  char* ciphered = caesarCipher(argv[3], 1, strlen(argv[3]));
   //strcpy(ciphered, caesarCipher(argv[2], 1));
 
   printf("%s\n", ciphered);
@@ -558,7 +564,6 @@ int main(int argc,char **argv)
   fwrite(newBuf, 1, fileLen, out);
 
   fclose(out);
-
   free(bmFileHeader);
   free(bmCoreHeader);
   free(bmInfoHeader);
