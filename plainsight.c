@@ -13,24 +13,21 @@
 unsigned short ReadLE2(FILE *fp);
 unsigned int ReadLE4(FILE *fp);
 
-union {
-  unsigned int x;
-  struct {
-    unsigned int r:8;
-    unsigned int g:8;
-    unsigned int b:8;
-  } rgb;
-} pixel;
+struct {
+  unsigned int r:8;
+  unsigned int g:8;
+  unsigned int b:8;
+} rgb;
 
 unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen)
 {
   for (int i = 56; i < fileLen + 1; i += 3)
   {
-    pixel.rgb.r = (int)buffer[i];
-    pixel.rgb.g = (int)buffer[i + 1];
-    pixel.rgb.b = (int)buffer[i + 2];
+    rgb.r = (int)buffer[i];
+    rgb.g = (int)buffer[i + 1];
+    rgb.b = (int)buffer[i + 2];
 
-    printf("%.2X%.2X%.2X ", pixel.rgb.r, pixel.rgb.g, pixel.rgb.b);
+    printf("%.2X%.2X%.2X ", rgb.r, rgb.g, rgb.b);
   }
 
   return NULL;
