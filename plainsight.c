@@ -254,7 +254,31 @@ char* caesarCipher(char* inputMessage, int shiftAmount)
   strcpy(message, inputMessage);
 
   // Begin implementation of caesar cipher
-
+  char ch;
+	int i;
+  for(i = 0; message[i] != '\0'; ++i){
+		ch = message[i];
+		
+		if(ch >= 'a' && ch <= 'z'){
+			ch = ch + shiftAmount;
+			
+			if(ch > 'z'){
+				ch = ch - 'z' + 'a' - 1;
+			}
+			
+			message[i] = ch;
+		}
+		else if(ch >= 'A' && ch <= 'Z'){
+			ch = ch + shiftAmount;
+			
+			if(ch > 'Z'){
+				ch = ch - 'Z' + 'A' - 1;
+			}
+			
+			message[i] = ch;
+		}
+	}
+  return message;
   
 }
 
