@@ -6,6 +6,10 @@
 #include <time.h>
 
 #define RESERVED_OFFSET 6
+#define FIRST_MODULUS 0x0C
+#define SECOND_MODULUS 0X11
+#define SPACE 0x06
+#define EXTRA 0x00
 unsigned short ReadLE2(FILE *fp);
 unsigned int ReadLE4(FILE *fp);
 
@@ -291,15 +295,15 @@ int main(int argc,char **argv)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
-  output(buffer, fileLen);
-
   int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader);
-  
-  buffer[RESERVED_OFFSET] =     0xFF;  // The start of the escape character sequence
-  buffer[RESERVED_OFFSET + 1] = 0x11;  // The modulus number
-  buffer[RESERVED_OFFSET + 2] = 0x06;  // The spaces between pixels
-  buffer[RESERVED_OFFSET + 3] = 0x00;  // Reserving this value right now
+
+  buffer[RESERVED_OFFSET] =     FIRST_MODULUS;  // The start of the escape character sequence
+  buffer[RESERVED_OFFSET + 1] = SECOND_MODULUS;  // The modulus number
+  buffer[RESERVED_OFFSET + 2] = SPACE;  // The spaces between pixels
+  buffer[RESERVED_OFFSET + 3] = EXTRA;  // Reserving this value right now
   fwrite(buffer, 1, fileLen, fp);
+
+  output(buffer, fileLen);
 
   fclose(fp);
 
