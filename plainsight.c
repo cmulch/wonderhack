@@ -19,15 +19,43 @@ struct {
   unsigned int b:8;
 } rgb;
 
-unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen)
+unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, int offset, char* message, unsigned long messageSize)
 {
-  for (int i = 56; i < fileLen + 1; i += 3)
+  int escapeFlag = 0;
+  int messageCounter = 0;
+
+  for (int i = offset; i < fileLen + 1; i += SPACE)
   {
     rgb.r = (int)buffer[i];
     rgb.g = (int)buffer[i + 1];
     rgb.b = (int)buffer[i + 2];
 
-    printf("%.2X%.2X%.2X ", rgb.r, rgb.g, rgb.b);
+    if (messageCounter == messageSize)
+    {
+      printf("Writing end escape character...\n");
+      escapeFlag--;
+
+      if (escapeFlag == 0)
+        break;
+
+      continue;
+    }
+    else if (messageCounter < messageSize & escapeFlag == 4)
+    {
+      printf("Writing normal character...\n");
+      messageCounter++;
+    }
+
+    if (escapeFlag != 4)
+    {
+      printf("Writing escape character...\n");
+      escapeFlag++;
+    }
+
+
+    //printf("%.2X%.2X%.2X ", rgb.r, rgb.g, rgb.b);
+
+
   }
 
   return NULL;
@@ -208,7 +236,7 @@ int main(int argc,char **argv)
 
   printf("Random Offset: %d\n", offset);
 
-  encryptedBuffer(buffer, fileLen);
+  encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[2]));
 
   free(bmFileHeader);
   free(bmCoreHeader);
