@@ -256,21 +256,20 @@ int main(int argc,char **argv)
   fread(buffer, fileLen, 1, fp);
 
   // We need to reset the position of the file pointer, because fread moves the pointer to the end of the file
-  fseek(fp, 0, headersize);
-  int c = 41;
-
-  for (int i = 0; i < 10; i++)
+  fseek(fp, 0, SEEK_SET);
+  for (int c = 0; c < fileLen + 1; c++)
   {
-    printf("%.2X ", buffer[c]);
-    c++;
-    printf("%.2X ", buffer[c]);
-    c++;
-    printf("%.2X ", buffer[c]);
-    c++;
-    printf("%.2X ", buffer[c]);
-    c++;
-    printf("\n");
-    
+    printf("%.2X ", (int)buffer[c]);
+
+    if (c % 4 == 3)
+    {
+      printf(" ");
+    }
+
+    if (c % 16 == 15)
+    {
+      printf("\n");
+    }
   }
 
   fclose(fp);
