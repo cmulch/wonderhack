@@ -247,6 +247,17 @@ int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAP
   return randomPosition;
 }
 
+char* caesarCipher(char* inputMessage, int shiftAmount)
+{
+  char message[sizeof(inputMessage)] = {'\0'};
+
+  strcpy(message, inputMessage);
+
+  // Begin implementation of caesar cipher
+
+  
+}
+
 int main(int argc,char **argv)
 {
   FILE *fp;
