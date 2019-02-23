@@ -207,11 +207,13 @@ void output(unsigned char *buffer, int fileLen)
   {
     printf("%.2X ", (int)buffer[c]);
 
+    // 4 columns
     if (c % 4 == 3)
     {
       printf(" ");
     }
 
+    // 16 bytes long
     if (c % 16 == 15)
     {
       printf("\n");
@@ -292,10 +294,11 @@ int main(int argc,char **argv)
   int offset = genRandomPosition(argv[2], bmFileHeader, bmInfoHeader);
 
   int reserved_offset = 6;
-  buffer[reserved_offset] = 0xFF;
-  buffer[reserved_offset + 1] = 0x11;
-  buffer[reserved_offset + 2] = 0x06;
-  buffer[reserved_offset + 3] = 0x00;
+  
+  buffer[reserved_offset] = 0xFF;      // The start of the escape character sequence
+  buffer[reserved_offset + 1] = 0x11;  // The modulus number
+  buffer[reserved_offset + 2] = 0x06;  // The spaces between pixels
+  buffer[reserved_offset + 3] = 0x00;  // Reserving this value right now
   fwrite(buffer, 1, fileLen, fp);
 
   fclose(fp);
