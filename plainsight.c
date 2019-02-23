@@ -235,9 +235,8 @@ int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, BITMAP
 
   srand(time(NULL));
 
-  int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - sizeof(inputMessage);
-
-  int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits);
+  int max = bmInfoHeader->biWidth * bmInfoHeader->biHeight - (sizeof(inputMessage) * 7);
+  int randomPosition = rand() % (max + 1 - bmFileHeader->bfOffBits) + bmFileHeader->bfOffBits;
 
   return randomPosition;
 }
