@@ -387,6 +387,48 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
   return encryptedBuf;
 }
 
+unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsigned int endPos)
+{
+    unsigned char *origMsg = (unsigned char *)malloc(8192 + 1);
+    unsigned int i_msg = 0;
+    unsigned int index = startPos;
+    unsigned int rgbTotal = 0;
+    char letter = '\0';
+
+    while (index != endPos) {
+        
+        printf("index is: %d\n", index);
+        rgbTotal += buffer[index];
+        rgbTotal += buffer[index + 1];
+        rgbTotal += buffer[index + 2];
+        index += 3;
+
+        //printf("Encrypted letter: %.2x\n", (rgbTotal % 26));
+        origMsg[i_msg] = (char)(rgbTotal % 26);
+        //printf("asdfasdf\n");
+        i_msg++;   // increment the position in the message buffer
+        rgbTotal = 0;  // reset the rgbTtotal value
+        // If we've reached the end then return the message that we decoded else increment by
+        // the number of spaces per pixel
+        index += SPACE;
+
+        /* if (index > 50) {
+            return "it failed";
+        } */
+    }
+
+    i_msg++;
+    origMsg[i_msg] = '\0';
+    
+    caesarCipher(origMsg, 1, strlen(origMsg));
+    // Add 97 to each character in the entire bitch
+    for (int i = 0; i < strlen(origMsg); i++) {
+        origMsg[i] = origMsg[i] + 97;
+    }
+    return origMsg;
+    
+}
+
 void output(unsigned char *buffer, int fileLen)
 {
   for (int c = 0; c < 100; c++)
