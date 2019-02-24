@@ -64,7 +64,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
 
       printf("End: %d\n", i);
 
-      int num = 0x123456;
+      //int num = 0x123456;
 
       i = i - SPACE - 1;
 
