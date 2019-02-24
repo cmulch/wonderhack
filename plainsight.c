@@ -80,7 +80,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
     encryptedBuf[i] = buffer[i];
   }
 
-  printf("Message Size to Encrypt: %lu\n", messageSize);
+  //printf("Message Size to Encrypt: %lu\n", messageSize);
 
   for (int i = offset; i < fileLen + 1; i += SPACE + 3)
   {
@@ -98,11 +98,13 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
 
     if (messageCounter == messageSize)
     {
-      printf("Offset: %d\n", offset);
+      //printf("Offset: %d\n", offset);
 
       //printf("We've finished writing our method...\n");
 
-      printf("End: %d\n", i = i - SPACE);
+      //printf("End: %d\n", i = i - SPACE);
+
+      i = i - SPACE;
 
       //int num = 0x123456;
 
@@ -116,10 +118,156 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
     else if (messageCounter < messageSize)
     {
       //printf("Writing normal character...\n");
-      printf("Current Character: %d\n", (int)currentChar - 97);
-      printf("Current Character: %c\n", currentChar);
+      //printf("Current Character: %d\n", (int)currentChar - 97);
+      //printf("Current Character: %c\n", currentChar);
 
       toReach = (int)currentChar - 97;
+
+      if (currentChar == ' ')
+      {
+        toReach = 0;
+        rgbMod = rgbTotal % 27;
+
+        difference = toReach - rgbMod;
+
+        if (abs(difference) > 13)
+        {
+          //printf("We found a space character we need to increment to reach...\n");
+
+          for (int j = 0; j < 27 - abs(difference); j++)
+          {
+            if (currentPos == 3)
+            {
+              //printf("Switching back to 0\n");
+              currentPos = 0;
+            }
+
+            if (currentPos == 0)
+            {
+              //printf("Updating R\n");
+
+              if (rgb.r == 255)
+              {
+                //printf("This should be an overflow...\n");
+                currentPos++;
+                j--;
+                continue;
+              }
+
+              rgb.r = rgb.r + 1;
+              currentPos++;
+              continue;
+            }
+            else if (currentPos == 1)
+            {
+              //printf("Updating G\n");
+
+              if (rgb.g == 255)
+              {
+                //printf("This should be an overflow...\n");
+                currentPos++;
+                j--;
+                continue;
+              }
+
+              rgb.g = rgb.g + 1;
+              currentPos++;
+              continue;
+            }
+            else if (currentPos == 2)
+            {
+              //printf("Updating B\n");
+
+              if (rgb.b == 255)
+              {
+                //printf("This should be an overflow...\n");
+                currentPos++;
+                j--;
+                continue;
+              }
+
+              rgb.b = rgb.b + 1;
+              currentPos++;
+              continue;
+            }
+          }
+        }
+        else
+        {
+          //printf("We found a space character we need to decrement to reach...\n");
+
+          for (int j = 0; j < abs(difference); j++)
+          {
+            if (currentPos == 3)
+            {
+              //printf("Switching back to 0\n");
+              currentPos = 0;
+            }
+
+            if (currentPos == 0)
+            {
+              //printf("Updating R\n");
+
+              if (rgb.r == 255)
+              {
+                //printf("This should be an overflow...\n");
+                currentPos++;
+                j--;
+                continue;
+              }
+
+              rgb.r = rgb.r - 1;
+              currentPos++;
+              continue;
+            }
+            else if (currentPos == 1)
+            {
+              //printf("Updating G\n");
+
+              if (rgb.g == 255)
+              {
+                //printf("This should be an overflow...\n");
+                currentPos++;
+                j--;
+                continue;
+              }
+
+              rgb.g = rgb.g - 1;
+              currentPos++;
+              continue;
+            }
+            else if (currentPos == 2)
+            {
+              //printf("Updating B\n");
+
+              if (rgb.b == 255)
+              {
+                //printf("This should be an overflow...\n");
+                currentPos++;
+                j--;
+                continue;
+              }
+
+              rgb.b = rgb.b - 1;
+              currentPos++;
+              continue;
+            }
+          }
+        }
+
+        rgbTotal = 0;
+        rgbTotal += rgb.r;
+        rgbTotal += rgb.g;
+        rgbTotal += rgb.b;
+
+        encryptedBuf[i] = (char)rgb.r;
+        encryptedBuf[i + 1] = (char)rgb.g;
+        encryptedBuf[i + 2] = (char)rgb.b;
+
+        messageCounter++;
+
+        continue;
+      }
 
       rgbMod = rgbTotal % 26;
 
@@ -127,7 +275,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
 
       //printf("Initial RGB Total: %d\n", rgbTotal);
 
-      printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+      //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
 
       difference = toReach - rgbMod;
 
@@ -135,7 +283,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
 
       if (difference < 0 & abs(difference) > 13)
       {
-        printf("Negative difference, overflow increment...\n");
+        //printf("Negative difference, overflow increment...\n");
 
         for (int j = 0; j < (26 - rgbMod) + toReach; j++)
         {
@@ -200,12 +348,12 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
       else if (difference > 0 & abs(difference) > 13)
       {
-        printf("Positive difference, overflow decrement...\n");
+        //printf("Positive difference, overflow decrement...\n");
 
         for (int j = 0; j < (26 - toReach) + rgbMod; j++)
         {
@@ -270,12 +418,12 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
       else if (difference < 0)
       {
-        printf("Negative difference, decrement...\n");
+        //printf("Negative difference, decrement...\n");
 
         for (int j = 0; j < abs(difference); j++)
         {
@@ -340,12 +488,12 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
       else if (difference > 0)
       {
-        printf("Positive difference, increment...\n");
+        //printf("Positive difference, increment...\n");
 
         for (int j = 0; j < abs(difference); j++)
         {
@@ -410,14 +558,14 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
         rgbTotal += rgb.g;
         rgbTotal += rgb.b;
 
-        printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
-        printf("Updated RGB Total: %d\n", rgbTotal);
+        //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
+        //printf("Updated RGB Total: %d\n", rgbTotal);
       }
 
       messageCounter++;
     }
 
-    printf("Writing this: %d%d%d\n", rgb.r, rgb.g, rgb.b);
+    //printf("Writing this: %d%d%d\n", rgb.r, rgb.g, rgb.b);
 
     encryptedBuf[i] = (char)rgb.r;
     encryptedBuf[i + 1] = (char)rgb.g;
@@ -433,8 +581,8 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
     unsigned int i_msg = 0;
     unsigned short int index = startPos;
     unsigned int rgbTotal = 0;
-    //char letter = '\0';
-    printf("%d %d\n", startPos, endPos);
+    //char current;
+    //printf("%d %d\n", startPos, endPos);
 
     for (index = startPos; index < endPos; index += SPACE + 3) {
 
@@ -444,8 +592,15 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
         rgbTotal += buffer[index + 2];
 
         //printf("Encrypted letter: %.2x\n", (rgbTotal % 26));
+        if (rgbTotal % 27 == 0)
+        {
+          origMsg[i_msg] = ' ';
+          i_msg++;
+          rgbTotal = 0;
+          continue;
+        }
         origMsg[i_msg] = (char)((rgbTotal % 26) + 97);
-        printf("Current Character: %d\n", (rgbTotal % 26));
+        //printf("Current Character: %d\n", (rgbTotal % 26));
         i_msg++;   // increment the position in the message buffer
         rgbTotal = 0;  // reset the rgbTtotal value
         // If we've reached the end then return the message that we decoded else increment by
@@ -465,7 +620,7 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
         origMsg[i] = origMsg[i] + 97;
     }*/
 
-    printf("From Decrypt Method: %s\n", origMsg);
+    //printf("From Decrypt Method: %s\n", origMsg);
 
     return origMsg;
 
@@ -473,7 +628,7 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
 
 void output(unsigned char *buffer, int fileLen)
 {
-  for (int c = 35387; c < 35483; c++)
+  for (int c = 0; c < fileLen + 1; c++)
   {
     printf("%.2X ", (int)buffer[c]);
 
@@ -566,7 +721,7 @@ void spawnDecrypt(FILE *out, char* fileName)
 
   printf("Decrypted message: %s\n", message);
 
-  output(buffer, fileLen);
+  //output(buffer, fileLen);
 }
 
 void outputHeaderData(BITMAPFILEHEADER *bmFileHeader, BITMAPCOREHEADER *bmCoreHeader, BITMAPINFOHEADER *bmInfoHeader, int headersize)
@@ -666,13 +821,13 @@ void spawnEncrypt(FILE *fp, FILE *out, int argc, char** argv)
 
 
 
-  printf("%s\n", ciphered);
+  //printf("%s\n", ciphered);
 
   fclose(fp);
 
-  outputHeaderData(bmFileHeader, bmCoreHeader, bmInfoHeader, headersize);
+  //outputHeaderData(bmFileHeader, bmCoreHeader, bmInfoHeader, headersize);
 
-  printf("Random Offset: %d\n", offset);
+  //printf("Random Offset: %d\n", offset);
 
   unsigned char* newBuf = encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[4]));
   //output(newBuf, fileLen);
@@ -703,7 +858,7 @@ int main(int argc, char **argv)
   {
     spawnDecrypt(out, argv[2]);
 
-    //printf("Should see this...\n");
+    printf("Succesfully decrypted\n");
 
     exit(1);
   }
@@ -712,7 +867,7 @@ int main(int argc, char **argv)
   {
     spawnEncrypt(out, fp, argc, argv);
 
-    //printf("After encrypt...\n");
+    printf("Successfully encrypted image\n");
 
     exit(1);
   }
