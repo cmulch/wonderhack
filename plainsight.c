@@ -23,6 +23,42 @@ struct {
   unsigned int x:24;
 } twentyFour;
 
+char* caesarCipher(char* inputMessage, int shiftAmount, unsigned long messageSize)
+{
+  char* message = (char*)malloc(messageSize + 1);
+
+  strcpy(message, inputMessage);
+
+  // Begin implementation of caesar cipher
+  char ch;
+	int i;
+  for(i = 0; message[i] != '\0'; ++i){
+		ch = message[i];
+
+		if(ch >= 'a' && ch <= 'z'){
+			ch = ch + shiftAmount;
+
+			if(ch > 'z'){
+				ch = ch - 'z' + 'a' - 1;
+			}
+
+			message[i] = ch;
+		}
+		else if(ch >= 'A' && ch <= 'Z'){
+			ch = ch + shiftAmount;
+
+			if(ch > 'Z'){
+				ch = ch - 'Z' + 'A' - 1;
+			}
+
+			message[i] = ch;
+		}
+	}
+
+  return message;
+
+}
+
 // Possibly using wrong & in if statements?
 unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, unsigned short int offset, char* message, unsigned long messageSize)
 {
@@ -62,11 +98,11 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
 
       //printf("We've finished writing our method...\n");
 
-      printf("End: %d\n", i);
+      printf("End: %d\n", i = i - SPACE - 1);
 
       //int num = 0x123456;
 
-      i = i - SPACE - 1;
+      //i = i - SPACE - 1;
 
       encryptedBuf[46] = (i >> 16);
       encryptedBuf[46 + 1] = ((i >> 8) & 0xFF);
@@ -396,7 +432,7 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
     char letter = '\0';
 
     while (index != endPos) {
-        
+
         printf("index is: %d\n", index);
         rgbTotal += buffer[index];
         rgbTotal += buffer[index + 1];
@@ -419,14 +455,14 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
 
     i_msg++;
     origMsg[i_msg] = '\0';
-    
+
     caesarCipher(origMsg, 1, strlen(origMsg));
     // Add 97 to each character in the entire bitch
     for (int i = 0; i < strlen(origMsg); i++) {
         origMsg[i] = origMsg[i] + 97;
     }
     return origMsg;
-    
+
 }
 
 void output(unsigned char *buffer, int fileLen)
@@ -476,55 +512,67 @@ short int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, 
   return randomPosition;
 }
 
-char* caesarCipher(char* inputMessage, int shiftAmount, unsigned long messageSize)
+void spawnDecrypt(FILE *out, char* fileName)
 {
-  char* message = (char*)malloc(messageSize + 1);
+  if ((out = fopen(fileName, "rb")) == NULL) {
+      printf("Cannot open file: %s\n\n", fileName);
+      exit(1);
+  }
 
-  strcpy(message, inputMessage);
+  // Get file length
+  fseek(out, 0, SEEK_END);
+  unsigned long fileLen = ftell(out);
+  fseek(out, 0, SEEK_SET);
 
-  // Begin implementation of caesar cipher
-  char ch;
-	int i;
-  for(i = 0; message[i] != '\0'; ++i){
-		ch = message[i];
+  // Create our buffer with all the data from the file. Cast malloc return to a char pointer
+  // So that the program knows we are pointing to characters instead of any data type
+  unsigned char *buffer = (unsigned char *)malloc(fileLen + 1);
+  if (!buffer)
+  {
+    fprintf(stderr, "Memory error!");
+    fclose(out);
+    return;
+  }
 
-		if(ch >= 'a' && ch <= 'z'){
-			ch = ch + shiftAmount;
+  // Read everything into our buffer
+  fread(buffer, fileLen, 1, out);
 
-			if(ch > 'z'){
-				ch = ch - 'z' + 'a' - 1;
-			}
+  printf("%.2X%.2X%.2X\n", buffer[46], buffer[47], buffer[48]);
 
-			message[i] = ch;
-		}
-		else if(ch >= 'A' && ch <= 'Z'){
-			ch = ch + shiftAmount;
-
-			if(ch > 'Z'){
-				ch = ch - 'Z' + 'A' - 1;
-			}
-
-			message[i] = ch;
-		}
-	}
-
-  return message;
-
+  output(buffer, fileLen);
 }
 
-int main(int argc,char **argv)
+void outputHeaderData(BITMAPFILEHEADER *bmFileHeader, BITMAPCOREHEADER *bmCoreHeader, BITMAPINFOHEADER *bmInfoHeader, int headersize)
 {
-  FILE *fp;
-  FILE *out;
+  printf("File type          = %s\n", bmFileHeader->bfType);
+  printf("File size          = %d bytes\n", bmFileHeader->bfSize);
+  printf("Data offset        = %ld bytes\n", bmFileHeader->bfOffBits);
+  if (headersize == 12) {
+      printf("Info header size   = %d bytes\n", bmCoreHeader->bcSize);
+      printf("Width              = %d pixels\n", bmCoreHeader->bcWidth);
+      printf("Height             = %d pixels\n", bmCoreHeader->bcHeight);
+      printf("Planes             = %d\n", bmCoreHeader->bcPlanes);
+      printf("Bit count          = %d bits/pixel\n", bmCoreHeader->bcBitCount);
+  } else if (headersize == 40) {
+      printf("Info header size   = %d bytes\n", bmInfoHeader->biSize);
+      printf("Width              = %ld pixels\n", bmInfoHeader->biWidth);
+      printf("Height             = %ld pixels\n", bmInfoHeader->biHeight);
+      printf("Planes             = %d\n", bmInfoHeader->biPlanes);
+      printf("Bit count          = %d bits/pixel\n", bmInfoHeader->biBitCount);
+      printf("Compression        = %d\n", bmInfoHeader->biCompression);
+      printf("Size image         = %d bytes\n", bmInfoHeader->biSizeImage);
+      printf("X pixels per meter = %ld\n", bmInfoHeader->biXPixPerMeter);
+      printf("Y pixels per meter = %ld\n", bmInfoHeader->biYPixPerMeter);
+      printf("Color used         = %ld colors\n", bmInfoHeader->biClrUsed);
+  }
+}
+
+void spawnEncrypt(FILE *fp, FILE *out, int argc, char** argv)
+{
   BITMAPFILEHEADER *bmFileHeader = NULL;
   BITMAPCOREHEADER *bmCoreHeader = NULL;
   BITMAPINFOHEADER *bmInfoHeader = NULL;
   int headersize;
-
-  if (argc != 4) {
-      printf("Usage: bmpinfo <infile.bmp> <outfile.bmp> <message>\n\n");
-      exit(1);
-  }
 
   if ((fp = fopen(argv[1], "rb")) == NULL) {
       printf("Cannot open file: %s\n\n", argv[1]);
@@ -534,6 +582,7 @@ int main(int argc,char **argv)
       printf("Cannot open file: %s\n\n", argv[2]);
       exit(1);
   }
+
   bmFileHeader = ReadBMFileHeader(fp);
   if (strcmp(bmFileHeader->bfType, "BM") != 0) {
       printf("The file is not BITMAP.\n");
@@ -564,55 +613,35 @@ int main(int argc,char **argv)
   {
     fprintf(stderr, "Memory error!");
     fclose(fp);
-    return 0;
+    return;
   }
 
   // Read everything into our buffer
   fread(buffer, fileLen, 1, fp);
 
-  if (strlen(argv[3]) > 8192)
+  if (strlen(argv[4]) > 8192)
   {
     printf("String is too long, please try again with a smaller string.\n");
     exit(1);
   }
 
-  unsigned short int offset = genRandomPosition(argv[3], bmFileHeader, bmInfoHeader, strlen(argv[3]), fileLen);
+  unsigned short int offset = genRandomPosition(argv[4], bmFileHeader, bmInfoHeader, strlen(argv[4]), fileLen);
 
   buffer[RESERVED_OFFSET] = (offset >> 8);  // The index into the file where the data starts
   buffer[RESERVED_OFFSET + 1] = (offset & 0xFF);
   buffer[RESERVED_OFFSET + 2] = SPACE;  // The spaces between pixels
   buffer[RESERVED_OFFSET + 3] = EXTRA;  // Reserving this value right now
-  //output(buffer, fileLen);
+  output(buffer, fileLen);
 
   //ciphered[sizeof(argv[2])] = {'\0'};
-  char* ciphered = caesarCipher(argv[3], 1, strlen(argv[3]));
+  char* ciphered = caesarCipher(argv[4], 1, strlen(argv[4]));
   //strcpy(ciphered, caesarCipher(argv[2], 1));
 
   printf("%s\n", ciphered);
 
   fclose(fp);
 
-  printf("File type          = %s\n", bmFileHeader->bfType);
-  printf("File size          = %d bytes\n", bmFileHeader->bfSize);
-  printf("Data offset        = %ld bytes\n", bmFileHeader->bfOffBits);
-  if (headersize == 12) {
-      printf("Info header size   = %d bytes\n", bmCoreHeader->bcSize);
-      printf("Width              = %d pixels\n", bmCoreHeader->bcWidth);
-      printf("Height             = %d pixels\n", bmCoreHeader->bcHeight);
-      printf("Planes             = %d\n", bmCoreHeader->bcPlanes);
-      printf("Bit count          = %d bits/pixel\n", bmCoreHeader->bcBitCount);
-  } else if (headersize == 40) {
-      printf("Info header size   = %d bytes\n", bmInfoHeader->biSize);
-      printf("Width              = %ld pixels\n", bmInfoHeader->biWidth);
-      printf("Height             = %ld pixels\n", bmInfoHeader->biHeight);
-      printf("Planes             = %d\n", bmInfoHeader->biPlanes);
-      printf("Bit count          = %d bits/pixel\n", bmInfoHeader->biBitCount);
-      printf("Compression        = %d\n", bmInfoHeader->biCompression);
-      printf("Size image         = %d bytes\n", bmInfoHeader->biSizeImage);
-      printf("X pixels per meter = %ld\n", bmInfoHeader->biXPixPerMeter);
-      printf("Y pixels per meter = %ld\n", bmInfoHeader->biYPixPerMeter);
-      printf("Color used         = %ld colors\n", bmInfoHeader->biClrUsed);
-  }
+  outputHeaderData(bmFileHeader, bmCoreHeader, bmInfoHeader, headersize);
 
   printf("Random Offset: %d\n", offset);
 
@@ -629,5 +658,34 @@ int main(int argc,char **argv)
   free(bmInfoHeader);
   free(ciphered);
 
+}
+
+int main(int argc, char **argv)
+{
+  FILE *fp = NULL;
+  FILE *out = NULL;
+
+  if (argc != 5) {
+      printf("Usage: bmpinfo <infile.bmp> <outfile.bmp> <encrypt or descrypt> <message>\n\n");
+      exit(1);
+  }
+
+  if (strcmp("decrypt", argv[3]) == 0)
+  {
+    spawnDecrypt(out, argv[2]);
+
+    printf("Should see this...\n");
+
+    exit(1);
+  }
+
+  if (strcmp("encrypt", argv[3]) == 0)
+  {
+    spawnEncrypt(out, fp, argc, argv);
+
+    printf("After encrypt...\n");
+
+    exit(1);
+  }
   return 0;
 }
