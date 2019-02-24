@@ -54,6 +54,8 @@ char* caesarCipher(char* inputMessage, int shiftAmount, unsigned long messageSiz
 			message[i] = ch;
 		}
 	}
+  //message[messageSize] = '\0';
+  //printf("Message Size in Caesar: %d\n", strlen(message));
 
   return message;
 
@@ -78,6 +80,8 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
     encryptedBuf[i] = buffer[i];
   }
 
+  //printf("Message Size to Encrypt: %lu\n", messageSize);
+
   for (int i = offset; i < fileLen + 1; i += SPACE + 3)
   {
     rgb.r = (int)encryptedBuf[i];
@@ -94,11 +98,11 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
 
     if (messageCounter == messageSize)
     {
-      printf("Offset: %d\n", offset);
+      //printf("Offset: %d\n", offset);
 
       //printf("We've finished writing our method...\n");
 
-      printf("End: %d\n", i = i - SPACE - 1);
+      //printf("End: %d\n", i = i - SPACE);
 
       //int num = 0x123456;
 
@@ -123,7 +127,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
 
       //printf("Initial RGB Total: %d\n", rgbTotal);
 
-      //printf("%.2X%.2X%.2X\n", rgb.r, rgb.g, rgb.b);
+      //printf("%d%d%d\n", rgb.r, rgb.g, rgb.b);
 
       difference = toReach - rgbMod;
 
@@ -413,7 +417,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
       messageCounter++;
     }
 
-    //printf("%.2X%.2X%.2X\n", rgb.r, rgb.g, rgb.b);
+    //printf("Writing this: %d%d%d\n", rgb.r, rgb.g, rgb.b);
 
     encryptedBuf[i] = (char)rgb.r;
     encryptedBuf[i + 1] = (char)rgb.g;
@@ -427,26 +431,24 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
 {
     unsigned char *origMsg = (unsigned char *)malloc(8192 + 1);
     unsigned int i_msg = 0;
-    unsigned int index = startPos;
+    unsigned short int index = startPos;
     unsigned int rgbTotal = 0;
-    char letter = '\0';
+    //char letter = '\0';
 
-    while (index != endPos) {
+    for (index = startPos; index < endPos; index += SPACE + 3) {
 
-        printf("index is: %d\n", index);
+        //printf("index is: %d\n", index);
         rgbTotal += buffer[index];
         rgbTotal += buffer[index + 1];
         rgbTotal += buffer[index + 2];
-        index += 3;
 
         //printf("Encrypted letter: %.2x\n", (rgbTotal % 26));
-        origMsg[i_msg] = (char)(rgbTotal % 26);
+        origMsg[i_msg] = (char)((rgbTotal % 26) + 97);
         //printf("asdfasdf\n");
         i_msg++;   // increment the position in the message buffer
         rgbTotal = 0;  // reset the rgbTtotal value
         // If we've reached the end then return the message that we decoded else increment by
         // the number of spaces per pixel
-        index += SPACE;
 
         /* if (index > 50) {
             return "it failed";
@@ -456,18 +458,18 @@ unsigned char* Decrypt(unsigned char* buffer, unsigned short int startPos, unsig
     i_msg++;
     origMsg[i_msg] = '\0';
 
-    caesarCipher(origMsg, 1, strlen(origMsg));
+    //caesarCipher(origMsg, 1, strlen(origMsg));
     // Add 97 to each character in the entire bitch
-    for (int i = 0; i < strlen(origMsg); i++) {
+    /*for (int i = 0; i < strlen(origMsg); i++) {
         origMsg[i] = origMsg[i] + 97;
-    }
+    }*/
     return origMsg;
 
 }
 
 void output(unsigned char *buffer, int fileLen)
 {
-  for (int c = 0; c < 100; c++)
+  for (int c = 0; c < fileLen + 1; c++)
   {
     printf("%.2X ", (int)buffer[c]);
 
@@ -491,7 +493,7 @@ short int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, 
 {
   char* message = (char*)malloc(messageSize + 1);
 
-  printf("Random Position: %lu\n", messageSize);
+  //printf("Random Position: %lu\n", messageSize);
 
   strcpy(message, inputMessage);
 
@@ -507,7 +509,7 @@ short int genRandomPosition(char* inputMessage, BITMAPFILEHEADER *bmFileHeader, 
 
   free(message);
 
-  printf("Random Pos: %d\n", randomPosition);
+  //printf("Random Pos: %d\n", randomPosition);
 
   return randomPosition;
 }
@@ -537,9 +539,30 @@ void spawnDecrypt(FILE *out, char* fileName)
   // Read everything into our buffer
   fread(buffer, fileLen, 1, out);
 
-  printf("%.2X%.2X%.2X\n", buffer[46], buffer[47], buffer[48]);
+  unsigned int endPos = 0;
+  unsigned short int startPos = 0;
 
-  output(buffer, fileLen);
+  endPos = buffer[46];
+  endPos = endPos << 16;
+  endPos += ( (int)buffer[47] << 8);
+  endPos += buffer[48];
+
+  startPos = buffer[RESERVED_OFFSET];
+  startPos = startPos << 8;
+  startPos = startPos + buffer[RESERVED_OFFSET + 1];
+
+  //printf("%d\n", startPos);
+
+  //printf("%d\n", endPos);
+  //printf("%.2X%.2X%.2X\n", buffer[46], buffer[47], buffer[48]);
+
+  unsigned char* message = (unsigned char*)malloc(8192 + 1);
+
+  message = Decrypt(buffer, startPos, endPos);
+
+  printf("Decrypted message: %s\n", message);
+
+  //output(buffer, fileLen);
 }
 
 void outputHeaderData(BITMAPFILEHEADER *bmFileHeader, BITMAPCOREHEADER *bmCoreHeader, BITMAPINFOHEADER *bmInfoHeader, int headersize)
@@ -631,11 +654,13 @@ void spawnEncrypt(FILE *fp, FILE *out, int argc, char** argv)
   buffer[RESERVED_OFFSET + 1] = (offset & 0xFF);
   buffer[RESERVED_OFFSET + 2] = SPACE;  // The spaces between pixels
   buffer[RESERVED_OFFSET + 3] = EXTRA;  // Reserving this value right now
-  output(buffer, fileLen);
+  //output(buffer, fileLen);
 
   //ciphered[sizeof(argv[2])] = {'\0'};
-  char* ciphered = caesarCipher(argv[4], 1, strlen(argv[4]));
+  char* ciphered = caesarCipher(argv[4], 0, strlen(argv[4]));
   //strcpy(ciphered, caesarCipher(argv[2], 1));
+
+
 
   printf("%s\n", ciphered);
 
@@ -645,8 +670,8 @@ void spawnEncrypt(FILE *fp, FILE *out, int argc, char** argv)
 
   printf("Random Offset: %d\n", offset);
 
-  unsigned char* newBuf = encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[3]));
-  output(newBuf, fileLen);
+  unsigned char* newBuf = encryptedBuffer(buffer, fileLen, offset, ciphered, strlen(argv[4]));
+  //output(newBuf, fileLen);
 
   //printf("%d\n", memcmp(newBuf, buffer, 20000));
 
@@ -674,7 +699,7 @@ int main(int argc, char **argv)
   {
     spawnDecrypt(out, argv[2]);
 
-    printf("Should see this...\n");
+    //printf("Should see this...\n");
 
     exit(1);
   }
@@ -683,9 +708,12 @@ int main(int argc, char **argv)
   {
     spawnEncrypt(out, fp, argc, argv);
 
-    printf("After encrypt...\n");
+    //printf("After encrypt...\n");
 
     exit(1);
   }
+
+  printf("If you see this, something went very wrong.\n");
+
   return 0;
 }
