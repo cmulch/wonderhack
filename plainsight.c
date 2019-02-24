@@ -8,7 +8,7 @@
 #define RESERVED_OFFSET 6
 #define FIRST_MODULUS 0x0C
 #define SECOND_MODULUS 0X11
-#define SPACE 0x01
+#define SPACE 0x03
 #define EXTRA 0x00
 unsigned short ReadLE2(FILE *fp);
 unsigned int ReadLE4(FILE *fp);
@@ -42,7 +42,7 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
     encryptedBuf[i] = buffer[i];
   }
 
-  for (int i = offset; i < fileLen + 1; i += SPACE)
+  for (int i = offset; i < fileLen + 1; i += SPACE + 3)
   {
     rgb.r = (int)encryptedBuf[i];
     rgb.g = (int)encryptedBuf[i + 1];
@@ -65,6 +65,8 @@ unsigned char* encryptedBuffer(unsigned char* buffer, unsigned long fileLen, uns
       printf("End: %d\n", i);
 
       int num = 0x123456;
+
+      i = i - SPACE - 1;
 
       encryptedBuf[46] = (i >> 16);
       encryptedBuf[46 + 1] = ((i >> 8) & 0xFF);
